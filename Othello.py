@@ -32,8 +32,8 @@ class Othello:
         for i in range(1, 9):
             for j in range(1, 9):
                 self._board[i][j] = '.'
-        self._board[4][4], self._board[5][5] = 'X', 'X'
-        self._board[4][5], self._board[5][4] = 'O', 'O'
+        self._board[4][4], self._board[5][5] = 'O', 'O'
+        self._board[4][5], self._board[5][4] = 'X', 'X'
         self.players = []
 
     def print_board(self):
