@@ -100,16 +100,17 @@ class Othello:
         return False
 
     def make_move(self, color, piece_position):
-        """Make a move for a player at a specified position.
+    """Make a move for a player at a specified position.
 
-                color: Color of the player's pieces ("black" or "white")
-                piece_position: Position on the board to place a piece
-                """
-        i, j = piece_position
-        self._board[i][j] = color
-        for direction in self._directions:
-            if self._check_line_match(i, j, direction, color):
-                self._flip_pieces_in_line(i, j, direction, color)
+    color: Color of the player's pieces ("black" or "white")
+    piece_position: Position on the board to place a piece
+    """
+    i, j = piece_position
+    self._board[i][j] = color
+    for direction in self._directions:
+        if self._check_line_match(i, j, direction, color):
+            self._flip_pieces_in_line(i, j, direction, color)
+    return self._board
 
     def _flip_pieces_in_line(self, i, j, direction, color):
         """Flip pieces in a line in a specific direction.
