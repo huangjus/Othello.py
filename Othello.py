@@ -9,125 +9,136 @@
 # pieces on the board.
 
 class Player:
-    """Player class that represents a player in the game."""
+    """Initialize a Player with a name and a color.
 
+            name: Player's name
+            color: Color of the player's pieces ("black" or "white")
+            """
     def __init__(self, name, color):
-        """Initialize a player with a name and a color.
-
-        name: Player's name.
-        color: Player's piece color. Either "black" or "white".
-        """
         self._name = name
         self._color = color
 
 
 class Othello:
-    """Othello class that represents the game as played."""
+    _directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
 
     def __init__(self):
-        """Initialize a game with the default board setting."""
-        self._board = [['*' if i == 0 or i == 9 or j == 0 or j == 9 else '.' for j in range(10)] for i in range(10)]
-        self._board[4][4] = 'O'
-        self._board[5][5] = 'O'
-        self._board[4][5] = 'X'
-        self._board[5][4] = 'X'
-        self._players = []
-        self._directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        """Initialize an Othello game with an empty board and no players."""
+        self._board = [['*' for _ in range(10)] for _ in range(10)]
+        for i in range(1, 9):
+            for j in range(1, 9):
+                self._board[i][j] = '.'
+        self._board[4][4], self._board[5][5] = 'O', 'O'
+        self._board[4][5], self._board[5][4] = 'X', 'X'
+        self.players = []
 
     def print_board(self):
-        """Prints the current game board, including the boundaries."""
+        """Print the current state of the game board."""
         for row in self._board:
             print(' '.join(row))
-        print()
 
     def create_player(self, player_name, color):
-        """Creates a player object and adds it to the player list.
+        """Create a Player and add them to the list of players.
 
-        player_name: Player's name.
-        color: Player's color. Either "black" or "white".
-        """
-        player = Player(player_name, color)
-        self._players.append(player)
+                player_name: Player's name
+                color: Color of the player's pieces ("black" or "white")
+                """
+        color = 'X' if color == 'black' else 'O'
+        self.players.append(Player(player_name, color))
 
     def return_winner(self):
-        """Returns the winner of the game.
+        """Return the winner of the game based on the current state of the board.
 
-        Returns: The name of the winner or a statement indicating a tie.
-        """
+                Returns: A string indicating the winner or declaring a tie
+                """
         count_black = sum(row.count('X') for row in self._board)
         count_white = sum(row.count('O') for row in self._board)
         if count_black > count_white:
-            return f"Winner is black player: " \
-                   f"{self._players[0]._name if self._players[0]._color == 'black' else self._players[1]._name}"
+            winner = next(player._name for player in self.players if player._color == 'X')
+            return f"Winner is black player: {winner}"
         elif count_white > count_black:
-            return f"Winner is white player: " \
-                   f"{self._players[0]._name if self._players[0]._color == 'white' else self._players[1]._name}"
+            winner = next(player._name for player in self.players if player._color == 'O')
+            return f"Winner is white player: {winner}"
         else:
             return "It's a tie"
 
     def return_available_positions(self, color):
-        """Returns a list of possible positions for a move.
+        """Return a list of available positions for a player.
 
-        color: The color of the player's piece.
+                color: Color of the player's pieces ("black" or "white")
 
-        Returns: A list of possible positions for a move.
-        """
+                Returns: A list of tuples representing available positions on the board
+                """
         positions = []
-        opponent = 'O' if color == 'X' else 'X'
         for i in range(1, 9):
             for j in range(1, 9):
                 if self._board[i][j] == '.':
                     for direction in self._directions:
-                        x, y = i+direction[0], j+direction[1]
-                        if self._board[x][y] == opponent:
-                            while self._board[x][y] == opponent:
-                                x += direction[0]
-                                y += direction[1]
-                            if self._board[x][y] == color:
-                                positions.append((i, j))
+                        if self._check_line_match(i, j, direction, color):
+                            positions.append((i, j))
+                            break
         return positions
 
+    def _check_line_match(self, i, j, direction, color):
+        """Check if a line matches a player's color in a specific direction.
+
+                i, j: Position on the board to check from
+                direction: Direction to check in
+                color: Color to check for
+
+                Returns: True if a match is found, False otherwise
+                """
+        i += direction[0]
+        j += direction[1]
+        if self._board[i][j] == '.' or self._board[i][j] == '*' or self._board[i][j] == color:
+            return False
+        while self._board[i][j] != '*':
+            i += direction[0]
+            j += direction[1]
+            if self._board[i][j] == color:
+                return True
+        return False
+
     def make_move(self, color, piece_position):
-        """Puts a piece at the given position and updates the board.
+        """Make a move for a player at a specified position.
 
-            color: The color of the piece to place.
-            piece_position: The position to place the piece.
-
-            Returns: The current state of the game board.
-            """
+                color: Color of the player's pieces ("black" or "white")
+                piece_position: Position on the board to place a piece
+                """
         i, j = piece_position
         self._board[i][j] = color
-        opponent = 'O' if color == 'X' else 'X'
         for direction in self._directions:
-                x, y = i + direction[0], j + direction[1]
-                if self._board[x][y] == opponent:
-                    while self._board[x][y] == opponent:
-                        x += direction[0]
-                        y += direction[1]
-                    if self._board[x][y] == color:
-                        while x != i or y != j:
-                            x -= direction[0]
-                            y -= direction[1]
-                            self._board[x][y] = color
-        return self._board
+            if self._check_line_match(i, j, direction, color):
+                self._flip_pieces_in_line(i, j, direction, color)
+
+    def _flip_pieces_in_line(self, i, j, direction, color):
+        """Flip pieces in a line in a specific direction.
+
+                i, j: Position on the board to flip pieces from
+                direction: Direction to flip pieces in
+                color: Color of pieces to flip to
+                """
+        i += direction[0]
+        j += direction[1]
+        while self._board[i][j] != color:
+            self._board[i][j] = color
+            i += direction[0]
+            j += direction[1]
 
     def play_game(self, player_color, piece_position):
-        """Attempts to make a move for the player at the specified position.
+        """Attempt a move for a player and update the game state accordingly.
 
-        player_color: The color of the player's piece.
-        piece_position: The position to place the piece.
-
-        Returns: A message indicating the result of the attempted move.
-        """
+                player_color: Color of the player making the move ("black" or "white")
+                piece_position: Position on the board to make the move
+                """
         color = 'X' if player_color == 'black' else 'O'
-        valid_positions = self.return_available_positions(color)
-        if piece_position not in valid_positions:
-            return "Invalid move\nHere are the valid moves:" + str(valid_positions)
+        if piece_position not in self.return_available_positions(color):
+            print("Invalid move")
+            print("Here are the valid moves:", self.return_available_positions(color))
+            return "Invalid move"
         else:
             self.make_move(color, piece_position)
-            if not self.return_available_positions('O') and not self.return_available_positions('X'):
-                count_black = sum(row.count('X') for row in self._board)
-                count_white = sum(row.count('O') for row in self._board)
-                print(f"Game is ended. White pieces: {count_white}, Black pieces: {count_black}")
+            if not (self.return_available_positions('X') or self.return_available_positions('O')):
+                print("Game is ended white piece: ", sum(row.count('O') for row in self._board),
+                      "black piece: ", sum(row.count('X') for row in self._board))
                 print(self.return_winner())
-            return "Move completed."
